@@ -9,7 +9,7 @@ RPM terminal will print errors and the profile will reconnect when errors are en
 
 Install by opening a terminal connection to host and running the following command:
 
-`bash <(curl -Ls "https://github.com/benumc/rubi/raw/main/rubi.sh")`
+`bash <(curl -Ls "https://https://github.com/developer-powershades/savant-powershades-profile/tree/main/rubi-script")`
 
 Uninstall by connecting the same way and running:
 
