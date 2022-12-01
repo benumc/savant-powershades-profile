@@ -1,0 +1,22 @@
+1. Show Library
+2. Components -> Drag PowerShades udp-api into Global Zone or Room Space depending on intended scope.
+3. Set as Shared Equipment
+4. Control Ports -> Ethernet -> Select Port on Switch/Controller? Set to 0.0.0.0 or Host IP of SHC (in demo)
+5. Generate Services
+6. Tools -> Settings -> Shades
+7. On Shades Settings click the "+" button to add shades or shade group devices
+8. Set Location, Entity (Individual or Group)
+9. Set Label for device
+10. Set address and channels
+11. Click Done
+12. Generate Service (for Configuration)
+13. Go back to Shades Settings and click "Show Advanced Columns"
+14. Changed "Savant App Group" to Variable for each shade/group. Click Done
+15. Generate Services again.
+16. Upload to Master (Save and Upload too)
+17. Upload to host.
+18. Click connect on User Interface
+19. Select the room where shades reside
+20. Test open/close
+
+
