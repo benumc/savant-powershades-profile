@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="racepoint_component_profile.xsd" manufacturer="Powershades" model="udp-api-v3"
-  device_class="Shade_controller" minimum_component_engine_version="0" rpm_xml_version="1.5">
+  device_class="Shade_controller" minimum_component_engine_version="0" rpm_xml_version="1.7">
 
 
   <notes>
     Add or overwrite existing profile normally but set the ip address on the wire to 127.0.0.1.
     Once uploaded, open a terminal connection to the host and after login, paste and run the following script. 
-    bash &lt;(curl -s "https://github.com/benumc/rubi/raw/main/rubi.sh")
+    bash &lt;(curl -Ls "https://https://github.com/developer-powershades/savant-powershades-profile/tree/main/rubi-script")
+
     This is only needed once per savant system host.
 
     To Address each shade
     1 - 4 each octet of the ip address of the rf gateway or poe shade
     5. Channel Number: (use 0 for poe shades) otherwise determined by powershades config software
+
+    Use Individual Variable Shade type for single shades
+    Use Variable Shade type for RF Shade Groups
   </notes>
   <component_properties>
 
@@ -46,7 +50,7 @@
       <status_message name="DeviceStatus">
         <constant type="character">device_status,current_percent,</constant>
         <data type="character" terminator_type="character" terminator=",">
-          <update state="ShadeLevel" type="string"/>
+          <update state="ShadeLevel" type="integer"/>
         </data>
         <constant type="character">current_tilt,</constant>
         <data type="character" terminator_type="character" terminator=",">
@@ -359,15 +363,15 @@
           </command>
         </command_interface>
       </action>
-      <entity name="Individual Shade" address_components="5">
+      <entity name="Individual Variable Shade" address_components="5">
         <slider_representation>
           <press_action name="ShadeSet"/>
           <valueSource name="ShadeLevel">
-            <unique_identifier name="1st IP octet 0 - 255" address_component="1"/>
-            <unique_identifier name="2nd IP octet 0 - 255" address_component="2"/>
-            <unique_identifier name="3rd IP octet 0 - 255" address_component="3"/>
-            <unique_identifier name="4th IP octet 0 - 255" address_component="4"/>
-            <unique_identifier name="Channel (0 for POE or RF Gateway Group) 0 - 30" address_component="5"/>
+            <unique_identifier name="Address1" address_component="1"/>
+            <unique_identifier name="Address2" address_component="2"/>
+            <unique_identifier name="Address3" address_component="3"/>
+            <unique_identifier name="Address4" address_component="4"/>
+            <unique_identifier name="Address5" address_component="5"/>
           </valueSource>
         </slider_representation>                
         <group_representation>
@@ -442,78 +446,78 @@
           <with_arg name="Address5" address_component="5"/>
         </query_status_with_action>
       </entity>
-      <entity name="RF Shade Group" address_components="5">
+      <entity name="Variable Shade" address_components="5">
         <slider_representation>
           <press_action name="RFShadeSet"/>
           <valueSource name="ShadeLevel">
-            <unique_identifier name="1st IP octet 0 - 255" address_component="1"/>
-            <unique_identifier name="2nd IP octet 0 - 255" address_component="2"/>
-            <unique_identifier name="3rd IP octet 0 - 255" address_component="3"/>
-            <unique_identifier name="4th IP octet 0 - 255" address_component="4"/>
-            <unique_identifier name="RF Group Bitmask 0 - (1073741823 for all channels)" address_component="5"/>
+            <unique_identifier name="Address1" address_component="1"/>
+            <unique_identifier name="Address2" address_component="2"/>
+            <unique_identifier name="Address3" address_component="3"/>
+            <unique_identifier name="Address4" address_component="4"/>
+            <unique_identifier name="Address5" address_component="5"/>
           </valueSource>
         </slider_representation>
         <group_representation>
           <push_button_representation >
-            <release_action name="GoupSet">
+            <release_action name="GroupSet">
               <argument name="ShadeLevel" value="0"/>
             </release_action>
-            <osd_press_action name="GoupSet">
+            <osd_press_action name="GroupSet">
               <argument name="ShadeLevel" value="0"/>
             </osd_press_action>
           </push_button_representation>
           <push_button_representation >
-            <release_action name="GoupSet">
+            <release_action name="GroupSet">
               <argument name="ShadeLevel" value="20"/>
             </release_action>
-            <osd_press_action name="GoupSet">
+            <osd_press_action name="GroupSet">
               <argument name="ShadeLevel" value="20"/>
             </osd_press_action>
           </push_button_representation>
           <push_button_representation >
-            <release_action name="GoupSet">
+            <release_action name="GroupSet">
               <argument name="ShadeLevel" value="40"/>
             </release_action>
-            <osd_press_action name="GoupSet">
+            <osd_press_action name="GroupSet">
               <argument name="ShadeLevel" value="40"/>
             </osd_press_action>
           </push_button_representation>
           <push_button_representation >
-            <release_action name="GoupSet">
+            <release_action name="GroupSet">
               <argument name="ShadeLevel" value="60"/>
             </release_action>
-            <osd_press_action name="GoupSet">
+            <osd_press_action name="GroupSet">
               <argument name="ShadeLevel" value="60"/>
             </osd_press_action>
           </push_button_representation>
           <push_button_representation >
-            <release_action name="GoupSet">
+            <release_action name="GroupSet">
               <argument name="ShadeLevel" value="80"/>
             </release_action>
-            <osd_press_action name="GoupSet">
+            <osd_press_action name="GroupSet">
               <argument name="ShadeLevel" value="80"/>
             </osd_press_action>
           </push_button_representation>
           <push_button_representation >
-            <release_action name="GoupSet">
+            <release_action name="GroupSet">
               <argument name="ShadeLevel" value="100"/>
             </release_action>
-            <osd_press_action name="GoupSet">
+            <osd_press_action name="GroupSet">
               <argument name="ShadeLevel" value="100"/>
             </osd_press_action>
           </push_button_representation>
         </group_representation>
         <toggle_button_representation>
-          <release_action name="GoupSet">
+          <release_action name="GroupSet">
             <argument name="ShadeLevel" value="100"/>
           </release_action>
-          <toggle_action name="GoupSet">
+          <toggle_action name="GroupSet">
             <argument name="ShadeLevel" value="0"/>
           </toggle_action>
-          <osd_press_action name="GoupSet">
+          <osd_press_action name="GroupSet">
             <argument name="ShadeLevel" value="100"/>
           </osd_press_action>
-          <osd_hold_action name="GoupSet">
+          <osd_hold_action name="GroupSet">
             <argument name="ShadeLevel" value="0"/>
           </osd_hold_action>
         </toggle_button_representation>
@@ -861,8 +865,8 @@ include Socket::Constants
 require 'logger'
 
 $l = Logger.new($stderr)
-$l.level = Logger::WARN
-$l.level = Logger::DEBUG
+$l.level = Logger::ERROR
+# $l.level = Logger::DEBUG
 
 def local_ip
   return '0.0.0.0' if RUBY_PLATFORM == 'arm-linux-gnueabi'
@@ -895,7 +899,7 @@ class Powershades < UDPSocket
       data = buffer[k]
       length,data  = parse(data)
       next unless length  
-      puts "#{data},address,#{k}" if data
+      $stdout.puts "#{data},address,#{k}" if data
       $l.debug "packet decoded, removing #{length} bytes from input buffer for #{k}"
       buffer[k][0..length - 1] = ''
       $l.debug buffer
