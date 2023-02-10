@@ -1,31 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="racepoint_component_profile.xsd" manufacturer="Powershades" model="udp-api-b"
-  device_class="Shade_controller" minimum_component_engine_version="0" rpm_xml_version="1.3">
+<component xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="racepoint_component_profile.xsd" manufacturer="Powershades" model="udp-api-v3b"
+  device_class="Shade_controller" minimum_component_engine_version="0" rpm_xml_version="1.5">
 
 
   <notes>
-    Version 1.3b: Removed feedback for RF Shades as it can cause issues with poor rf environments.
-    Version 1.3:  Replaced installation script.
-    Version 1.2:  Reduced inter-command delay to match new manufacturer recommendations.
-    
-    Built in CRC calculator fails for large packets. 
-    We must implement a co-processor to handle the calculations.
-    Co-Processor will install automatically on first upload if the IP address on the wire is set correctly
-    The wire must be set to IP address of the Savant Host
-    Once uploaded you may see profile restart.
-    Co-Processor allows us to configure a single profile to communicate with all available powershade devices by setting them up in the data table.
-    
+    Removed feedback for RF Shades as it can cause issues with poor rf environments.
+
+    Add or overwrite existing profile normally but set the ip address on the wire to 127.0.0.1.
+    Once uploaded, open a terminal connection to the host and after login, paste and run the following script. 
+    bash &lt;(curl -s "https://github.com/benumc/rubi/raw/main/rubi.sh")
+    This is only needed once per savant system host.
+
     To Address each shade
     1 - 4 each octet of the ip address of the rf gateway or poe shade
     5. Channel Number: (use 0 for poe shades) otherwise determined by powershades config software
   </notes>
   <component_properties>
-    <listen_for_third_party_service_requests>true</listen_for_third_party_service_requests><!--_run_once_-->
+
   </component_properties>
   <control_interfaces preferred="ip">
-    <ip port="25803" response_time_length_ms="1000" protocol="udp" local_port="25803"><!--_run_once_-->
-      <!--_run_after_<ip port="25803" response_time_length_ms="10000" protocol="tcp">-->
-      <!--_run_after_<send_postfix type="hex">0A</send_postfix>-->
+    <ip port="25809" response_time_length_ms="10000" protocol="tcp">
+      <send_postfix type="hex">0D0A</send_postfix>
       <receive_end_condition test_condition="data" type="hex">0A</receive_end_condition>
     </ip>
   </control_interfaces>
@@ -33,7 +28,7 @@
     <data name_on_component="Ethernet">
       <combined_media>
         <data_media type="ethernet"/>
-        <control port="25803"/>
+        <control port="25809"/>
       </combined_media>
     </data>
     
@@ -44,117 +39,12 @@
   </media_interfaces>
   <state_variable_list>
     <state_variable name="sequence_number" owning_logical_component="Shade Controller" state_center_binding="sequence_number" state_center_type="integer" min_value="0" max_value="255" wrap_around_type="difference">0</state_variable>
-    <state_variable name="coprocessor_connected" owning_logical_component="Shade Controller" state_center_binding="coprocessor_connected" state_center_type="integer">0</state_variable>
-    <state_variable name="profile_name" owning_logical_component="CoProcessor" state_center_binding="profile_name" state_center_type="string">powershades_udp-api-b</state_variable>
-    <state_variable name="prefix" owning_logical_component="CoProcessor" state_center_binding="prefix" state_center_type="string">---1-SVC_GEN_GENERIC-RunCLIProgram:COMMAND_STRING=</state_variable>
   </state_variable_list>
-  <logical_component logical_component_name="CoProcessor">
-    <implementation/>
-    <custom_component_actions>
-      
-      <action name="START">
-        <update_state_variable name="ready" update_type="set" update_source="constant">NO</update_state_variable>
-        <command_interface interface="ip">
-          
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">rm ~/rs</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">echo 'cd ~;grep -A9999 "#\!" '>~/s1s</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">[ -d /Users ] &amp;&amp; echo '/Users/RPM/Library/Application\ Support'>~/s2s</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="100"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">[ -d /Users ] || echo '/home/RPM/GNUstep/Library/ApplicationSupport'>~/s2s</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">echo '/RacePointMedia/userConfig.rpmConfig/componentProfiles'>~/s3s</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">echo '/$1.xml>$1;ruby $1 &amp;>>$1.log &amp;!'>~/s4s</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">cat ~/s*s | tr -d '\n' > ~/rs</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">/bin/zsh ~/rs </parameter>
-              <parameter parameter_data_type="character" state_variable="profile_name"/>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="1000"/>
-          </command>
-          <command response_required="no">
-            <command_string type="character"/>
-            <parameter_list>
-              <parameter parameter_data_type="character" state_variable="prefix"/>
-              <parameter parameter_data_type="character">rm ~/s1s ~/s2s ~/s3s ~/s4s</parameter>
-              <parameter parameter_data_type="hex">0A</parameter>
-            </parameter_list>
-            <delay ms_delay="10000"/>
-          </command>
-        </command_interface>
-        <execute_on_schedule period_ms="0"/><!--_run_once_-->
-        <execute_on_schedule period_ms="30000"/><!--_run_once_-->
-      </action>
-    </custom_component_actions>
-  </logical_component>
   <logical_component logical_component_name="Shade Controller">
     <implementation>
       <internal name_on_component="Shade"/>
     </implementation>
     <status_messages><!-- POE Shades appear to update on channel 1 not channel 0 as indicated in the documentation -->      
-      <status_message name="CoprocessorConnected">
-        <constant type="character">coprocessor_connected,</constant>
-        <data type="character" terminator_type="end_of_data">
-          <update state="coprocessor_connected" type="integer"/>
-        </data>
-      </status_message>
       <status_message name="DeviceStatus">
         <constant type="character">device_status,current_percent,</constant>
         <data type="character" terminator_type="character" terminator=",">
@@ -279,7 +169,7 @@
         <append_data_to_state_names state="octet_3"/>
         <append_data_to_state_names state="octet_4"/>
         <append_data_to_state_names state="channel"/>
-      </status_message>-->
+      </status_message> -->
       <status_message name="SerialNumber"> <!-- POE shade order doesn't match documentation -->
         <constant type="character">get_serial_number,model,</constant>
         <data type="character" terminator_type="character" terminator=",">
@@ -356,7 +246,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string >powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -381,6 +271,7 @@
               <parameter parameter_data_type="character" name="tilt">0000</parameter>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character_hex" name="channel mask">00000000</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="10"/>
           </command>
@@ -396,7 +287,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -421,6 +312,7 @@
               <parameter parameter_data_type="character" name="tilt">0000</parameter>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character_hex" name="channel mask">00000000</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="10"/>
           </command>
@@ -439,7 +331,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -544,7 +436,7 @@
             <argument name="ShadeLevel" value="0"/>
           </osd_hold_action>
         </toggle_button_representation>
-        <query_status_with_action name="GetStatus" period_ms="0">
+        <query_status_with_action name="GetStatus" period_ms="40000" send_on_reconnect="true">
           <with_arg name="Address1" address_component="1"/>
           <with_arg name="Address2" address_component="2"/>
           <with_arg name="Address3" address_component="3"/>
@@ -640,7 +532,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -657,6 +549,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -672,7 +565,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -689,6 +582,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -704,7 +598,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -721,6 +615,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -736,7 +631,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -753,6 +648,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -768,7 +664,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -785,6 +681,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -800,7 +697,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -817,6 +714,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -832,7 +730,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -849,6 +747,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -864,7 +763,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -881,6 +780,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -896,7 +796,7 @@
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -913,6 +813,7 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
@@ -924,11 +825,10 @@
         <action_argument name="Address3" note="0 - 255"/>
         <action_argument name="Address4" note="0 - 255"/>
         <action_argument name="Address5" note="0 - 30 Device Channel"/>
-        <execute_on_state_variable_condition name="coprocessor_connected" test_condition="equal">1</execute_on_state_variable_condition>
         <update_state_variable name="sequence_number" update_type="increment" update_source="constant">1</update_state_variable>   
         <command_interface interface="ip">
           <command response_required="no">
-            <command_string></command_string>
+            <command_string>powershades_udp.send_message('</command_string>
             <parameter_list>
               <parameter parameter_data_type="character" action_argument="Address1"/>
               <parameter parameter_data_type="character">.</parameter>
@@ -945,51 +845,31 @@
               <parameter parameter_data_type="character" name="channel" action_argument="Address5"/>
               <parameter parameter_data_type="character">,</parameter>
               <parameter parameter_data_type="character" name="reserved">00</parameter>
+              <parameter parameter_data_type="character">')</parameter>
             </parameter_list>
             <delay ms_delay="100"/>
           </command>
         </command_interface>
       </action>
-    </custom_component_actions>
-  </logical_component>
-</component>
-<!--[CDATA[ 
-#!/usr/bin/env ruby
-exit unless DATA.flock(File::LOCK_NB | File::LOCK_EX)
-###################################################Set Globals###########################################
-DEBUG = false
-LISTEN_THIRD_PARTY = false
-PORT = 42
-READ_TIMEOUT = 0.5
+      <action name="START">
+        <command_interface interface="ip">
+          <command response_required="no">
+            <command_string type="character"/>
+            <parameter_list>
+              <parameter parameter_data_type="character"><![CDATA[
 
 require 'socket'
 include Socket::Constants
 require 'logger'
 
-def program_loop(server_port)
-  profile_server = ProfileServer.new(server_port)
-  powershades_udp = Powershades.new
-  $l.debug profile_server
-  $l.debug powershades_udp
-  rdy = select([profile_server],nil,nil,30)
-  raise 'no savant connection' unless rdy
-  profile_server.accept
-  profile_server.socks[0].puts 'coprocessor_connected,1'
-  loop do
-    select([profile_server.socks[0],powershades_udp])
-    powershades_udp.read_lines(profile_server.socks[0])
-    profile_server.read_lines(powershades_udp)
-  end
-rescue => e
-  $l.error [e,e.backtrace]
-  exit
-ensure
-  profile_server.close if profile_server rescue nil
-  powershades_udp.close if powershades_udp rescue nil
+$l = Logger.new($stderr)
+$l.level = Logger::WARN
+# $l.level = Logger::DEBUG
+
+def local_ip
+  return '0.0.0.0' if RUBY_PLATFORM == 'arm-linux-gnueabi'
+  Socket.ip_address_list.to_s[/ ((?!127)\d\d?\d?\.[0-9]+\.[0-9]+\.[0-9]+)/,1]
 end
-
-##########################################Helper Classes#####################################
-
 
 class Powershades < UDPSocket
 
@@ -1001,48 +881,55 @@ class Powershades < UDPSocket
     @port = addr[1]
     @buffer = {}
   end
-  
-  def read_lines(savant)
+
+  def read_lines
+    buffer = {}
     loop do
+      r = IO.select([self],nil,nil,1)
+      break unless r && r[0]
       data, info = recvfrom_nonblock(1024)
       (buffer[info[3]] ||= '' ) << data
+      buffer = handle_buffer(buffer)
     end
-  rescue IO::WaitReadable # read into receive buffer until would block  
+  end
+
+  def handle_buffer(buffer)
     buffer.keys.each do |k|
       data = buffer[k]
       length,data  = parse(data)
       next unless length  
-      savant.puts "#{data},address,#{k}" if data
+      puts "#{data},address,#{k}" if data
       $l.debug "packet decoded, removing #{length} bytes from input buffer for #{k}"
       buffer[k][0..length - 1] = ''
       $l.debug buffer
     end
+    buffer
   end
   
   def parse(data)
     return unless data.length > 7 # skip if incomplete data exists
-   $l.debug data.inspect
+  $l.debug data.inspect
     payload_length = data[0..1].unpack('v')[0]
-   $l.debug ['payload length', payload_length]
+  $l.debug ['payload length', payload_length]
     payload_crc = data[2..3].unpack('v')[0]
-   $l.debug payload_crc
+  $l.debug payload_crc
     crc_length = 4 + payload_length
     return unless data.length >= crc_length
     crc_data = data[4..(crc_length + 3)]
     calculated_crc = get_crc(crc_data).unpack('v')[0]
-   $l.debug "CRC Error #{calculated_crc.inspect} vs payload #{payload_crc} for #{crc_data}" unless payload_crc == calculated_crc
+  $l.debug "CRC Error #{calculated_crc.inspect} vs payload #{payload_crc} for #{crc_data}" unless payload_crc == calculated_crc
     operation_code = data[4].unpack('C')[0]
-   $l.debug "op code: #{operation_code}"
+  $l.debug "op code: #{operation_code}"
     sequence_code = data[5].unpack('C')[0]
-   $l.debug "seq code: #{sequence_code}"
+  $l.debug "seq code: #{sequence_code}"
     channel_number = data[6].unpack('C')[0]
-   $l.debug "channel number: #{channel_number}"
+  $l.debug "channel number: #{channel_number}"
     packet_length = payload_length + 8
     if payload_length > 0
       payload_data = data[8..(packet_length - 1)]
       payload = (get_payload(operation_code, payload_data) || []).join(',')
       payload = "#{payload},channel,#{channel_number}"
-     $l.debug payload
+    $l.debug payload
       return [packet_length, payload]
     end
     [packet_length]
@@ -1064,7 +951,7 @@ class Powershades < UDPSocket
     res << length
     res << crc
     res << data
-    send(res, 0, address, PORT)
+    send(res, 0, address, 42)
     [address, res.bytes]
   rescue => e
     $l.error [e,e.backtrace]
@@ -1138,454 +1025,17 @@ class Powershades < UDPSocket
   
 end
 
-##########################################Helper Classes#####################################
+powershades_udp = Powershades.new
+Thread.abort_on_exception = true
+Thread.new{loop{powershades_udp.read_lines}}
 
-class ProfileServer < Socket
-
-  attr_reader :port, :socks, :lsof
-  
-  def initialize(port)
-    super(AF_INET, SOCK_STREAM, 0)
-    @port = port
-    @socks = []
-    @lsof = RUBY_PLATFORM.include?('linux') ? 'lsof' : '/usr/sbin/lsof'
-    connect(local_ip, self, port)
-  end
-  
-  def connect(addr, s, p)
-    b = Socket.sockaddr_in(p, addr)
-    s.setsockopt(:SOCKET, :REUSEADDR, true)
-    s.bind(b)
-    s.listen(5)
-    @socket = s
-  end
-  
-  def xfix(fix,type)
-    return unless fix
-    [fix.to_i(16)].pack('C') if type == 'hex'
-  end
-  
-  def accept
-    $l.debug "accepting profile connection on #{port}"
-    s,info = accept_nonblock
-    s.extend SocketMethods
-    s.port = info.ip_port
-    s.name = profile_name(info.ip_port)
-    s.prefix = ''
-    s.postfix = "\n"
-    s.delimiter = "\n"
-    $l.warn "new connection from #{s.name} on port #{port}"
-    socks << s
-  end
-  
-  def profile_name(port)
-    pid = `#{@lsof} -i TCP:#{port} | grep avc`.match(/\s(\d+)\s/)[1]
-    `ps -o command= -p #{pid}`.chop.split('avc ')[1]
-  end
-  
-  def read_lines(socket)
-    ready = IO.select(socks,nil,nil,READ_TIMEOUT)
-    return unless ready
-    ready[0].each do |s|
-      m = s.next_line
-      next unless m
-      $l.debug m
-      $l.debug "sent: #{socket.send_message(m)}"
-    end
-  end
-  
-  private
-  
-end
-
-module SocketMethods
-
-  attr_accessor :name, :port, :delimiter, :postfix, :prefix
-
-  def inspect
-    {name:name,port:port,pid:pid,delimiter:delimiter}.to_s
-  end
-  
-  def puts(*msg)
-    msg.each{|m| print("#{prefix}#{m.gsub(postfix,'')}#{postfix}")}
-  end
-
-  def read_bytes(len)
-    raise 'savant disconnected' if closed?
-    read_nonblock(len)
-  rescue IO::WaitReadable
-    nil
-  end
-
-  def non_block_read
-    loop do
-      new_data = read_bytes 1024
-      break unless new_data
-      buf << new_data
-      break if new_data.length < 1024
-      $l.debug buf
-    end
-  end
-
-  def next_line
-    @buf ||= ''
-    $l.debug buf.inspect
-    non_block_read
-    $l.debug buf.inspect
-    $l.debug delimiter.inspect
-    line = buf.slice!(/^.*#{delimiter}/)
-    (line = line.chomp) || line
-  end
-
-  private
-
-  attr_accessor :buf
-end
-
-# Code below is required for program startup. Modification is not recommended.
-
-def local_ip
-  return '0.0.0.0' if RUBY_PLATFORM == 'arm-linux-gnueabi'
-  Socket.ip_address_list.to_s[/ ((?!127)\d\d?\d?\.[0-9]+\.[0-9]+\.[0-9]+)/,1]
-end
-
-
-def update_profile(env)
-  IO.write(env.profile_path, IO.read(env.profile_path).gsub(/^.+_ru#{}n_once.+$/,'').gsub(/<!-#{}-_run_after_(.+)-#{}->/,'\1'))
-end
-
-def startup_trigger(bridge_port,name)
-
-  env = $cli.env
-  start_request = [
-    '/bin/zsh', "#{env.home_path}rs",
-    "#{env.profile_name}"
-  ].join(' ')
-  trig = [
-    env.profile_name,2,
-    :Bool, "global.#{name}",
-    :ControlIsConnected, :Equal, :false, :State, :global,
-    :CurrentMinute, :Equal, 'global.CurrentMinute', 0
-  ]
-  trig.concat $cli.scli_array
-  trig << start_request
-  $l.debug trig
-  $cli.set_trigger(trig)
-end
-
-def install(env,port)
-  $l.warn 'Profile was updated. Installing start trigger. Process will restart'
-  `[ -d ~/asp ] && rm ~/asp`
-  `[ -d ~/cpf ] && rm ~/cpf`
-  `[ -d /home/RPM/GNUstep/Library/ApplicationSupport/ApplicationSupport ] && rm -r /home/RPM/GNUstep/Library/ApplicationSupport/ApplicationSupport`
-  `[ -d '/Users/RPM/Library/Application Support/Application Support' ] && rm -r '/Users/RPM/Library/Application Support/Application Support'`
-  serv = TCPServer.new(local_ip,port)
-  bridge_port = serv.addr[1]
-  startup_trigger(bridge_port,$cli.bp_names[0])
-  update_profile(env)
-  sleep 1
-  $cli.process_ids.each{|p| Process.kill('HUP',p)}
-  sleep 1
-  bridge_port
-rescue => e
-  $l.error [e,e.backtrace]
-  exit
-ensure
-  serv.close if serv
-end
-
-def uninstall(env)
- `rm '#{env.script_path}'`
- `rm '#{env.log_path}'`
-  $cli.remove_trigger([env.profile_name])
-  exit
-end
-
-class InternalRequests
-  
-  attr_reader :env, :cbi, :scli_arr, :bp_names, :process_ids
-  
-  def initialize
-    @scli = if RUBY_PLATFORM.include?('linux')  
-      '/usr/local/bin/sclibridge'
-    else
-      '/Users/RPM/Applications/RacePointMedia/sclibridge'
-    end
-    @scli_buffer = {
-      read_state:[],
-      write_state:[],
-      default:[]
-    }
-    @scli_count = 0
-    #scli_array
-
-    @env = Environment.new
-    @bp_names,@process_ids = process_map(env.profile_name)
-    #$l.debug([:names,@bp_names,:pids,@process_ids])
-  end
-
-  def process_map(profile_name)
-    names,pids = [],[]
-    known_process = scli_write([:statenames,'*CoProcessor.profile_name'])
-    raise 'Savant System Still Loading' if known_process.empty?
-    read_state(known_process).each_with_index do |avc,i|
-      next unless profile_name == avc
-      n = known_process[i].split('.').first
-      names << n
-      pids << `ps ax -o pid= -o command= | grep -v grep | grep 'avc #{n}'`.to_i
-    end
-    $l.debug [names,pids]
-    [names,pids]
-  rescue => e
-    $l.error e
-    if known_process.empty?
-      sleep 5
-      retry
-    end
-  end
-  
-  def count_scli
-    @scli_count = @scli_buffer.values.flatten.length
-  end
-  
-  def scli_next
-    return if @scli_count == 0
-    if @scli_buffer[:read_state].length > 0
-      a = @scli_buffer[:read_state].clone
-      @scli_buffer[:read_state] = []
-      Thread.new do
-        $l.debug ['requesting',a.map.to_a]
-        r = scli_write(:readstate,a.map.to_a)
-        r.each_index do |i|
-          m = a[i]
-          v = "#{m.respond_with}#{r[i]}"
-          $l.debug ['responding with:',v, 'from:',m]
-          m.response_to.puts(v) if m.response_to
-          #m.response_to.each{|s| s.puts(v)}
-        end
-      end
-    elsif @scli_buffer[:write_state].length > 0
-      a = @scli_buffer[:write_state].clone
-      @scli_buffer[:write_state] = []
-      Thread.new do
-        r = scli_write(:writestate,a.map.to_a)
-        r.each_index do |i|
-          m = a[i]
-          v = "#{m.respond_with}OK" 
-          m.response_to.puts(v) if m.response_to
-        end
-      end
-    else
-      req,args = @scli_buffer[:default].shift
-      $l.debug [req, args]
-      r = scli_write(req,args.to_a)
-      #m.response_to.puts(v) if m.response_to
-      v = "#{args.respond_with}#{r.join(",")}"
-      $l.debug ['responding with:',v, 'from:',args]
-      args.response_to.puts(v) if args.response_to
-    end
-    count_scli
-  end
-  
-  def id(m)
-    m.origin.name = m.to_s
-    m.response_to.puts(m.respond_with) if m.response_to
-  end
-  
-  def mtime
-    File.mtime(@env.profile_path)
-  end
-  
-  def trigger_name(m)
-    n = m.arguments.shift
-    c = m.arguments.shift.to_sym
-    method(c).call(m)
-    $l.debug [n,c,m.arguments]
-    remove_trigger(n) unless m.response_to
-  end
-    
-  def scli_array
-    return @scli_arr if @scli_arr
-    @scli_arr = state_names(['*SVC_GEN*']).first.split('.').take(5) 
-    @scli_arr << :RunCLIProgram << :COMMAND_STRING
-  end
-  
-  def service_request(m)
-    
-    if m.to_s.length > 126
-      warr = m.to_s.split(':', 2)
-      if warr[1]
-        m.arguments = warr[1].prepend(",").split(/,(\w+)=/)
-        m.arguments[0] = warr[0]
-      end
-      scli_request(:servicerequestcommand, m)
-    else
-      m.destination.puts(message)
-    end
-  end
-
-  def user_zones(m)
-    scli_request(:userzones, m)
-  end
-  
-  def services_for_zone(m)
-    scli_request(:servicesforzone, m)
-  end
-  
-  def state_names(m)
-    scli_request(:statenames, m)
-  end
-  
-  def remove_trigger(m)
-    scli_request(:removetrigger, m)
-  end
-  
-  def set_trigger(m)
-    scli_request(:settrigger, m)
-  end
-  
-  def read_state(m)
-    count_scli
-    #scli_request(:readstate, m)
-    if m.respond_to?(:response_to)
-      $l.debug m.response_to
-      m.to_a.each do |state|
-        message = m.clone
-        message.arguments = [state]
-        message.respond_with ||= state
-        @scli_buffer[:read_state] << message
-      end
-      count_scli
-      scli_next if @scli_count == 1
-    else
-      return scli_write(:readstate, m)
-    end
-    $l.debug @scli_buffer
-  end
-  
-  def write_state(m)
-    if m.respond_to?(:response_to)
-      m.to_a.each_cons(2) do |state,value|
-        message = m.clone
-        message.arguments = [state,value]
-        message.respond_with = state
-        @scli_buffer[:write_state] << message
-      end
-      count_scli
-      scli_next if @scli_count == 1
-    else
-      scli_write(:writestate, m)
-    end
-  end
-  
-  def uninstall_script(*_)
-    remove_trigger([env.profile_name])
-    $l.error "Uninstalled... Exiting..."
-    exit
-  end
-  
-  def restart_script(*_)
-    $l.error "Restart command received. Exiting..."
-    exit
-  end
-  
-  def log_level(m)
-    case "#{m}".downcase
-    when 'debug'
-      $l.level = Logger::DEBUG
-    when 'info'
-      $l.level = Logger::INFO
-    when 'warn'
-      $l.level = Logger::WARN
-    when 'error'
-      $l.level = Logger::ERROR
-    when 'fatal'
-      $l.level = Logger::FATAL
-    else
-      $l.level = Logger::UNKNOWN
-    end
-    
-  end
-
-  private
-  
-  def stdio_request(sock,req, args)
-    pr = Process.spawn("#{req} #{args}", :in => sock, :out => sock, :err => [:child, :out])
-    Process.detach pr
-    sock.close
-    false
-  end
-  
-  def scli_request(req,m)
-    if m.respond_to?(:response_to)
-      @scli_buffer[:default] << [req,m]
-      count_scli
-      scli_next if @scli_count == 1
-    else
-      scli_write(req,m)
-    end
-  end
-  
-  def scli_write(req,*m)
-    cli_write(scli, [req].concat(m))
-  end
-  
-  def cli_request(req,m)
-    r = cli_write(req, m.args)
-    s = m.response_to
-    return unless (r && s)
-    s.puts([m.respond_with,r])
-  end
-  
-  def cli_write(req,args)
-    a = "'#{args.join("' '")}'"
-    $l.debug ['requesting',req,a]
-    r = `#{req} #{a}`.chomp.split("\n")
-    $l.debug ['got',r]
-    r
-  end
-  
-  attr_accessor :scli
-end
-
-class Environment
-
-  attr_reader :profile_name, :profile_path, :script_path, :log_path, :home_path, :profiles_path, :rpm_path, :lock_path
-
-  def initialize
-    @profile_name = File.basename($0)
-    if RUBY_PLATFORM.include?('linux')
-      @home_path = '/home/RPM/'
-      @rpm_path = "#{home_path}GNUstep/Library/ApplicationSupport/RacePointMedia/"
-    else
-      @home_path = '/Users/RPM/'
-      @rpm_path = "#{home_path}Library/Application Support/RacePointMedia/"
-    end
-    @profiles_path = "#{rpm_path}userConfig.rpmConfig/componentProfiles/"
-    @profile_path = "#{profiles_path}#{profile_name}.xml"
-    @script_path = "#{home_path}#{profile_name}"
-    @log_path = "#{home_path}#{profile_name}.log"
-  end
-
-end
-
-def connection_info(env)
-  pattern = / po#{}rt="(\d+)".+proto#{}col="(\w+)"/
-  `grep '<ip po#{}rt' "#{env.profile_path}"`.match(pattern).captures
-end
-
-
-$l = Logger.new($stderr)
-$l.level = Logger::WARN
-$l.level = Logger::DEBUG if DEBUG
-env = Environment.new
-$cli = InternalRequests.new
-uninstall($cli.env) unless File.file?($cli.env.profile_path)
-port, protocol = connection_info($cli.env)
-$l.warn "script started with #{protocol} on #{port}"
-install($cli.env,port.to_i) if protocol == 'udp'
-program_loop(port.to_i)
-
-__END__
-DO NOT REMOVE: required for the DATA object above.
-#]]>-->
+                ]]></parameter>
+            </parameter_list>
+            <delay ms_delay="10000"/>
+          </command>
+        </command_interface>
+        <execute_on_schedule period_ms="0"></execute_on_schedule>
+      </action>
+    </custom_component_actions>
+  </logical_component>
+</component>
